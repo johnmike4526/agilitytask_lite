@@ -1,4 +1,4 @@
-# Agility Lite — Tablero de Entregables
+# Agility Task Lite
 
 Extensión de Chrome (MV3) para administrar un entregable completo de cualquier
 proyecto de AgilityTask: burndown, carga por desarrollador, tablero de tareas

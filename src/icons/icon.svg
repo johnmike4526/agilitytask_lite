@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#B9A6F0"/><stop offset="1" stop-color="#F2A8CE"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#9FE3C6"/><stop offset="1" stop-color="#B9A6F0"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#tile)"/>
+  <path d="M128 76c-22 18-50 24-78 14-20-7-36-6-50 3V128h128z" fill="url(#wave)" opacity=".55"/>
+  <path d="M24 36 L58 74 L80 58 L104 92" fill="none" stroke="#FFFFFF" stroke-width="12"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="104" cy="92" r="10" fill="#FFFFFF"/>
+</svg>
