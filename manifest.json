@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Agility Lite — Tablero de Entregables",
+  "version": "1.0.0",
+  "description": "Burndown, carga por desarrollador y tablero de tareas por entregable, sobre la API de AgilityTask.",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "action": {
+    "default_title": "Abrir tablero de entregables"
+  },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "options_page": "src/dashboard.html",
+  "optional_host_permissions": [
+    "https://*/*"
+  ]
+}

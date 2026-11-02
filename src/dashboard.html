@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tablero de Entregables</title>
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="titles">
+      <h1>Tablero de Entregables</h1>
+      <p id="project-name" class="muted">Sin proyecto seleccionado</p>
+    </div>
+    <div class="controls">
+      <label class="field">
+        <span>Grupo</span>
+        <select id="deliverable"></select>
+      </label>
+      <span id="group-mode" class="muted"></span>
+      <button id="refresh" class="primary" type="button">Actualizar</button>
+    </div>
+  </header>
+
+  <p id="status" class="status" hidden></p>
+
+  <section id="kpis" class="kpis" hidden></section>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" type="button" data-tab="resumen" role="tab">Resumen</button>
+    <button class="tab" type="button" data-tab="tareas" role="tab">Tareas</button>
+    <button class="tab" type="button" data-tab="agenda" role="tab">Agenda</button>
+    <button class="tab" type="button" data-tab="buscar" role="tab">Buscar</button>
+    <button class="tab" type="button" data-tab="config" role="tab">Configuración</button>
+  </nav>
+
+  <main>
+    <section id="panel-resumen" class="panel is-active">
+      <article class="card">
+        <header class="card-head">
+          <h2>Burndown</h2>
+          <span id="burndown-range" class="muted"></span>
+        </header>
+        <div id="burndown"><p class="empty">Carga la configuración y pulsa Actualizar.</p></div>
+      </article>
+
+      <article class="card">
+        <header class="card-head">
+          <h2>Tareas por desarrollador</h2>
+        </header>
+        <div id="workload"><p class="empty">Sin datos.</p></div>
+        <div class="table-wrap">
+          <table id="workload-table" class="grid">
+            <thead>
+              <tr>
+                <th>Desarrollador</th><th>Total</th><th>Completadas</th><th>En revisión</th>
+                <th>En curso</th><th>Por hacer</th><th>Vencidas</th><th>% Avance</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card">
+        <header class="card-head"><h2>Objetivos del entregable</h2></header>
+        <div class="table-wrap">
+          <table id="objectives-table" class="grid">
+            <thead>
+              <tr><th>Objetivo</th><th>Tareas</th><th>Completadas</th><th>Vencidas</th><th>% Avance</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section id="panel-tareas" class="panel">
+      <article class="card">
+        <header class="card-head filters">
+          <input id="search" type="search" placeholder="Buscar por tarea o Id…" />
+          <select id="filter-assignee"><option value="">Todos los asignados</option></select>
+          <select id="filter-status">
+            <option value="">Todos los estados</option>
+            <option value="TODO">Por hacer</option>
+            <option value="IN_PROGRESS">En curso</option>
+            <option value="IN_REVIEW">En revisión</option>
+            <option value="COMPLETED">Completada</option>
+            <option value="DISCARDED">Descartada</option>
+          </select>
+          <select id="filter-due">
+            <option value="">Cualquier fecha</option>
+            <option value="overdue">Vencidas</option>
+            <option value="soon">Por vencer (3 días)</option>
+            <option value="none">Sin fecha</option>
+          </select>
+          <span id="task-count" class="muted"></span>
+        </header>
+        <div class="table-wrap">
+          <table id="tasks-table" class="grid tasks">
+            <thead>
+              <tr>
+                <th data-sort="id">Id</th>
+                <th data-sort="priority">Prioridad</th>
+                <th data-sort="title">Tarea</th>
+                <th data-sort="assignee">Asignado</th>
+                <th data-sort="progress">% Avance</th>
+                <th data-sort="dueDate">Fecha</th>
+                <th data-sort="status">Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section id="panel-agenda" class="panel">
+      <article class="card agenda">
+        <div class="agenda-cal">
+          <header class="cal-head">
+            <button id="cal-prev" class="secondary" type="button" aria-label="Mes anterior">‹</button>
+            <h2 id="cal-title"></h2>
+            <button id="cal-next" class="secondary" type="button" aria-label="Mes siguiente">›</button>
+            <button id="cal-today" class="secondary" type="button">Hoy</button>
+            <span class="muted">Arrastra una tarea al día en que la vas a trabajar · doble clic para ver su detalle</span>
+          </header>
+          <div id="calendar"></div>
+        </div>
+        <aside class="agenda-side">
+          <input id="agenda-search" type="search" placeholder="Buscar por nombre o Id…" />
+          <label class="check"><input id="agenda-all" type="checkbox" /> Todo el proyecto, no solo este entregable</label>
+          <p id="agenda-count" class="muted"></p>
+          <div id="agenda-pool" class="pool"></div>
+        </aside>
+      </article>
+    </section>
+
+    <section id="panel-buscar" class="panel">
+      <article class="card">
+        <header class="card-head filters">
+          <input id="find" type="search" placeholder="Nombre o Id de la tarea…" autocomplete="off" />
+          <span id="find-count" class="muted"></span>
+        </header>
+        <div class="finder">
+          <div id="find-results" class="find-results"></div>
+          <div id="find-detail" class="find-detail"><p class="empty">Elige una tarea para ver su detalle.</p></div>
+        </div>
+      </article>
+    </section>
+
+    <section id="panel-config" class="panel">
+      <article class="card">
+        <header class="card-head"><h2>Conexión con AgilityTask</h2></header>
+        <form id="config-form" class="form" autocomplete="off">
+          <label class="field">
+            <span>URL base de la API</span>
+            <input id="cfg-base" type="url" required />
+          </label>
+          <label class="field">
+            <span>API key</span>
+            <input id="cfg-key" type="password" placeholder="Pegar la API key" />
+            <small>Se guarda solo en este navegador (chrome.storage.local) y nunca sale hacia otro destino.</small>
+          </label>
+          <div class="row">
+            <button id="test" class="secondary" type="button">Probar conexión</button>
+            <button id="load-projects" class="secondary" type="button">Cargar proyectos</button>
+          </div>
+          <label class="field">
+            <span>Proyecto</span>
+            <select id="cfg-project"></select>
+          </label>
+          <label class="field">
+            <span>Patrón para agrupar objetivos</span>
+            <input id="cfg-pattern" type="text" spellcheck="false" />
+            <small>Expresión regular sobre el título del objetivo. Lo que coincide
+              da nombre al grupo, así que «Entregable 3 - Documentación» y
+              «Entregable 3 — Pagos» caen juntos. En blanco, o si ningún objetivo
+              coincide, cada objetivo es su propio grupo.</small>
+          </label>
+          <fieldset class="field">
+            <legend>Rango del burndown</legend>
+            <div class="row">
+              <label class="field"><span>Inicio</span><input id="cfg-start" type="date" /></label>
+              <label class="field"><span>Fin</span><input id="cfg-end" type="date" /></label>
+            </div>
+            <small>En blanco: de la tarea más antigua del entregable al vencimiento más lejano.</small>
+          </fieldset>
+          <div class="row">
+            <button class="primary" type="submit">Guardar</button>
+            <span id="config-status" class="muted"></span>
+          </div>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>
