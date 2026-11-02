@@ -126,13 +126,21 @@ burndown a medias.
 ## Pruebas
 
 ```
-node scripts/model.test.mjs
-node scripts/view.test.mjs
+npm test
 ```
 
-`model.test.mjs` cubre semáforo, exclusión de descartadas, doble asignación,
-agrupación de objetivos (convención, sin convención, patrón propio o inválido)
-y la forma de la curva de burndown.
-`view.test.mjs` cubre la grilla del calendario, que lo agendado caiga en su día,
-el aviso de vencimiento, el detalle de tarea y el escapado de HTML en títulos y
-descripciones.
+Sin dependencias: solo Node. `scripts/dom-double.mjs` es un doble mínimo de DOM
+y de las APIs de `chrome` —unas cien líneas— que permite arrancar
+`src/dashboard.js` fuera del navegador.
+
+- `model.test.mjs`: semáforo, exclusión de descartadas, doble asignación,
+  agrupación de objetivos (convención, sin convención, patrón propio o
+  inválido) y la forma de la curva de burndown.
+- `view.test.mjs`: la grilla del calendario, que lo agendado caiga en su día,
+  el aviso de vencimiento, el detalle de tarea y el escapado de HTML en títulos
+  y descripciones.
+- `startup.test.mjs`: el arranque completo del tablero. Sin configuración no
+  revienta y no llama a la API; con configuración consulta, agrupa y pinta;
+  soltar una tarea en un día la guarda en `chrome.storage`; el doble clic abre
+  el tab Buscar con el detalle. El doble de DOM devuelve `null` para un id que
+  no exista en `dashboard.html`, así que un id mal escrito también falla aquí.
