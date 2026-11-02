@@ -18,7 +18,7 @@ const state = {
   config: null,
   objectives: [],
   tasks: [],
-  groups: new Map(),
+  groups: [],
   group: '',
   groupMode: 'patron',
   sort: { key: 'dueDate', dir: 1 },
