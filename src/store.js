@@ -9,6 +9,8 @@ const DEFAULTS = {
   projectId: '',
   projectName: '',
   group: '',
+  agendaAll: false,
+  agendaDone: false,
   groupPattern: DEFAULT_GROUP_PATTERN,
   rangeStart: '',
   rangeEnd: '',

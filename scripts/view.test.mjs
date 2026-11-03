@@ -36,6 +36,30 @@ assert.ok(nov3.indexOf('vence') === -1, 'el aviso de vencimiento no va en el dí
 assert.ok(html.slice(html.indexOf('data-day="2026-11-06"')).includes('1 vence'), 'el día del dueDate avisa');
 assert.ok(html.includes('is-today'), 'marca el día de hoy');
 
+// Tareas cerradas: caen en el día de completedAt, no en el de la agenda
+const cerrada = {
+  id: 'cerrada-1', title: 'Rotar el certificado del balanceador',
+  status: 'COMPLETED', priority: 'MEDIUM', progress: 100,
+  dueDate: '2026-11-20T17:00:00.000Z', createdAt: '2026-10-01T00:00:00.000Z',
+  completedAt: '2026-11-05T19:30:00.000Z', assignees: [persona], createdBy: persona, tags: [],
+};
+const conCerradas = calendarHtml({ cursor, plan, tasks, done: [cerrada], today: new Date(2026, 10, 1) });
+const nov5 = conCerradas.slice(conCerradas.indexOf('data-day="2026-11-05"'), conCerradas.indexOf('data-day="2026-11-06"'));
+assert.ok(nov5.includes('Rotar el certificado'), 'la cerrada cae en el día de completedAt');
+assert.ok(nov5.includes('chip is-done'));
+assert.ok(!nov5.includes('data-unschedule'), 'la cerrada no se puede desagendar: es historia');
+assert.ok(!nov5.includes('draggable'), 'y tampoco se arrastra');
+const nov20 = conCerradas.slice(conCerradas.indexOf('data-day="2026-11-20"'), conCerradas.indexOf('data-day="2026-11-21"'));
+assert.ok(!nov20.includes('Rotar el certificado'), 'no se dibuja en su fecha de vencimiento');
+assert.ok(!html.includes('Rotar el certificado'), 'sin la casilla marcada no aparece');
+
+// Sin completedAt cae a updatedAt; sin ninguno de los dos, no se dibuja
+const sinSello = { ...cerrada, id: 'cerrada-2', completedAt: null, updatedAt: '2026-11-11T12:00:00.000Z' };
+const conRespaldo = calendarHtml({ cursor, plan, tasks, done: [sinSello] });
+assert.ok(conRespaldo.slice(conRespaldo.indexOf('data-day="2026-11-11"'), conRespaldo.indexOf('data-day="2026-11-12"')).includes('Rotar el certificado'));
+const huerfana = calendarHtml({ cursor, plan, tasks, done: [{ ...cerrada, id: 'c3', completedAt: null, updatedAt: null }] });
+assert.ok(!huerfana.includes('Rotar el certificado'), 'sin fecha de cierre no se ubica en ningún día');
+
 // Escapado: nada de HTML crudo viniendo del título de una tarea
 const pool = poolHtml(tasks);
 assert.ok(!pool.includes('<script>'), 'el título no inyecta HTML');

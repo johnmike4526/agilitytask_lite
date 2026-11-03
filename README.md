@@ -51,7 +51,10 @@ vuelve a pedirlo desde Configuración.
   en el calendario o en la lista, la abre en el tab Buscar con su detalle. Por
   defecto muestra las del entregable seleccionado; la casilla amplía a todo el
   proyecto. El día que tiene vencimientos lo avisa en la esquina, aparte de lo
-  agendado.
+  agendado. Debajo del calendario, la casilla «Mostrar las tareas que cerré»
+  dibuja también lo ya completado en el día en que se cerró, en gris y tachado:
+  es historia, no se arrastra ni se desagenda, pero el doble clic abre su
+  detalle. Las dos casillas recuerdan su estado entre sesiones.
 - **Buscar**: por nombre o Id sobre todas las tareas del proyecto, con el
   detalle completo de la que elijas: avance, asignados, fechas (límite,
   original si fue extendida, creación, última edición, cierre), objetivo,
@@ -69,7 +72,9 @@ el compromiso con el cliente. Si reinstalas la extensión o limpias los datos de
 sitio, la agenda se pierde; las tareas no.
 
 La lista lateral muestra las tareas asignadas a la cuenta de la API key, en
-estado Por hacer, En curso o En revisión.
+estado Por hacer, En curso o En revisión. Las cerradas se ubican por
+`completedAt`, con `updatedAt` como respaldo cuando la tarea se cerró sin
+sellarlo; una tarea sin ninguna de las dos fechas no se dibuja en ningún día.
 
 ## Agrupación de objetivos
 
@@ -142,5 +147,7 @@ y de las APIs de `chrome` —unas cien líneas— que permite arrancar
 - `startup.test.mjs`: el arranque completo del tablero. Sin configuración no
   revienta y no llama a la API; con configuración consulta, agrupa y pinta;
   soltar una tarea en un día la guarda en `chrome.storage`; el doble clic abre
-  el tab Buscar con el detalle. El doble de DOM devuelve `null` para un id que
-  no exista en `dashboard.html`, así que un id mal escrito también falla aquí.
+  el tab Buscar con el detalle; y la casilla de tareas cerradas las dibuja en su
+  día y recuerda la elección al reabrir. El doble de DOM devuelve `null` para un
+  id que no exista en `dashboard.html`, así que un id mal escrito también falla
+  aquí.

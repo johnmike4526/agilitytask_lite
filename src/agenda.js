@@ -1,5 +1,5 @@
 import { escapeHtml } from './charts.js';
-import { PRIORITY_LABEL, STATUS_LABEL, dueState, percent } from './model.js';
+import { PRIORITY_LABEL, STATUS_LABEL, closedAt, dueState, percent } from './model.js';
 import { monthGrid, ymd } from './schedule.js';
 
 const monthFmt = new Intl.DateTimeFormat('es-PA', { month: 'long', year: 'numeric' });
@@ -16,13 +16,32 @@ function chip(task, { removable }) {
   </span>`;
 }
 
-export function calendarHtml({ cursor, plan, tasks, today = new Date() }) {
+const dayFmt = new Intl.DateTimeFormat('es-PA', { dateStyle: 'full' });
+
+// Las cerradas son historia, no plan: ni se arrastran ni se quitan del día.
+function doneChip(task) {
+  return `<span class="chip is-done" data-id="${escapeHtml(task.id)}"
+    title="Cerrada el ${dayFmt.format(new Date(closedAt(task)))}">
+    <span class="chip-text">${escapeHtml(task.title)}</span>
+  </span>`;
+}
+
+export function calendarHtml({ cursor, plan, tasks, done = [], today = new Date() }) {
   const byDay = new Map();
   for (const task of tasks) {
     const day = plan[task.id];
     if (!day) continue;
     if (!byDay.has(day)) byDay.set(day, []);
     byDay.get(day).push(task);
+  }
+
+  const doneByDay = new Map();
+  for (const task of done) {
+    const stamp = closedAt(task);
+    if (!stamp) continue;
+    const day = ymd(new Date(stamp));
+    if (!doneByDay.has(day)) doneByDay.set(day, []);
+    doneByDay.get(day).push(task);
   }
 
   const dueByDay = new Map();
@@ -38,6 +57,7 @@ export function calendarHtml({ cursor, plan, tasks, today = new Date() }) {
     const outside = date.getMonth() !== cursor.getMonth();
     const isToday = day === ymd(today);
     const scheduled = byDay.get(day) ?? [];
+    const closed = doneByDay.get(day) ?? [];
     const due = dueByDay.get(day) ?? 0;
     return `
       <div class="day${outside ? ' is-outside' : ''}${isToday ? ' is-today' : ''}" data-day="${day}">
@@ -45,7 +65,7 @@ export function calendarHtml({ cursor, plan, tasks, today = new Date() }) {
           <span class="day-number">${date.getDate()}</span>
           ${due ? `<span class="day-due" title="${due} ${due === 1 ? 'tarea vence' : 'tareas vencen'} este día">${due} vence${due === 1 ? '' : 'n'}</span>` : ''}
         </header>
-        <div class="day-chips">${scheduled.map((task) => chip(task, { removable: true })).join('')}</div>
+        <div class="day-chips">${scheduled.map((task) => chip(task, { removable: true })).join('')}${closed.map(doneChip).join('')}</div>
       </div>`;
   }).join('');
 

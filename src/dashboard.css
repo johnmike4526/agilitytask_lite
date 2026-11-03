@@ -230,3 +230,13 @@ td.date.overdue { color: var(--red); font-weight: 600; }
 .detail-desc { margin-top: 16px; }
 .detail-desc h4 { font-size: 12px; color: var(--muted); margin: 0 0 6px; text-transform: uppercase; letter-spacing: .04em; }
 .detail-desc pre { margin: 0; white-space: pre-wrap; word-break: break-word; font: inherit; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+
+.cal-foot { margin-top: 10px; }
+.chip.is-done {
+  background: transparent;
+  border-left-color: var(--green);
+  color: var(--muted);
+  cursor: default;
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--muted) 50%, transparent);
+}

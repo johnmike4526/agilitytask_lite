@@ -12,13 +12,19 @@ const OBJETIVOS = [
   { id: 'o2', title: 'Entregable 2 - Documentación' },
   { id: 'o3', title: 'reuniones' },
 ];
+// El calendario abre en el mes corriente: la tarea cerrada tiene que caer ahi
+// para que la prueba no dependa de la fecha en que se corra.
+const HOY = new Date();
+const DIA_CIERRE = new Date(HOY.getFullYear(), HOY.getMonth(), 4, 12, 0, 0);
+const CIERRE_YMD = `${DIA_CIERRE.getFullYear()}-${String(DIA_CIERRE.getMonth() + 1).padStart(2, '0')}-04`;
+
 const TAREAS = [
   { id: 't1', title: 'Tarea en curso', status: 'IN_PROGRESS', priority: 'HIGH', progress: 50,
     dueDate: '2026-11-20T17:00:00.000Z', createdAt: '2026-10-01T00:00:00.000Z',
     objectiveId: 'o1', assignees: [PERSONA], createdBy: PERSONA, tags: [] },
   { id: 't2', title: 'Tarea cerrada', status: 'COMPLETED', priority: 'LOW', progress: 100,
     dueDate: '2026-10-10T17:00:00.000Z', createdAt: '2026-10-01T00:00:00.000Z',
-    completedAt: '2026-10-09T17:00:00.000Z', objectiveId: 'o2', assignees: [], createdBy: PERSONA, tags: [] },
+    completedAt: DIA_CIERRE.toISOString(), objectiveId: 'o2', assignees: [PERSONA], createdBy: PERSONA, tags: [] },
 ];
 
 // Cada escenario necesita su propia instancia del módulo: el sufijo lo fuerza.
@@ -92,6 +98,33 @@ async function arrancar({ config = null, schedule = null, granted = true } = {})
   assert.ok(app.byId.get('panel-buscar').classes.has('is-active'));
   assert.match(app.$('find-detail').innerHTML, /Tarea en curso/, 'muestra el detalle de la tarea');
   assert.equal(app.$('find').value, 'Tarea en curso');
+}
+
+// 5. La casilla de tareas cerradas las dibuja en el dia en que se cerraron,
+//    y la eleccion sobrevive al siguiente arranque.
+{
+  const app = await arrancar({
+    config: { apiKey: 'k', baseUrl: 'https://ejemplo.test/api/v1', projectId: 'p1', group: '', groupPattern: '', rangeStart: '', rangeEnd: '' },
+  });
+  const calendario = () => app.$('calendar').innerHTML;
+  assert.ok(!calendario().includes('Tarea cerrada'), 'apagada, no se dibujan');
+
+  const casilla = app.$('agenda-done');
+  casilla.checked = true;
+  await casilla.dispatch('change', { target: casilla });
+  await new Promise((r) => setTimeout(r, 10));
+
+  const html = calendario();
+  const desde = html.indexOf(`data-day="${CIERRE_YMD}"`);
+  const dia = html.slice(desde, html.indexOf('data-day="', desde + 10));
+  assert.ok(dia.includes('Tarea cerrada'), 'aparece en el dia de completedAt');
+  assert.ok(dia.includes('chip is-done'));
+  assert.match(app.$('agenda-count').textContent, /1 cerradas/);
+  assert.equal(app.store.config.agendaDone, true, 'la eleccion queda guardada');
+
+  const vuelta = await arrancar({ config: app.store.config });
+  assert.equal(vuelta.$('agenda-done').checked, true, 'y vuelve marcada al reabrir');
+  assert.ok(vuelta.$('calendar').innerHTML.includes('Tarea cerrada'));
 }
 
 console.log('OK: arranque del tablero');

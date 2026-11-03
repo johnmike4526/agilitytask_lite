@@ -3,7 +3,7 @@ import { loadConfig, saveConfig } from './store.js';
 import { burndownSvg, workloadBars, escapeHtml } from './charts.js';
 import {
   PRIORITY_LABEL, STATUS_LABEL, burndown, defaultRange, groupObjectives,
-  dueState, isCounted, percent, perDeveloper, summarize,
+  closedAt, dueState, isCounted, isDone, percent, perDeveloper, summarize,
 } from './model.js';
 import { loadPlan, schedule } from './schedule.js';
 import { calendarHtml, monthTitle, poolHtml } from './agenda.js';
@@ -28,6 +28,7 @@ const state = {
   calCursor: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   agendaSearch: '',
   agendaAll: false,
+  agendaDone: false,
   findQuery: '',
   findSelected: null,
 };
@@ -308,6 +309,8 @@ function renderTasks(tasks) {
 function fillConfigForm() {
   $('#cfg-base').value = state.config.baseUrl;
   $('#cfg-key').value = state.config.apiKey;
+  $('#agenda-all').checked = state.config.agendaAll;
+  $('#agenda-done').checked = state.config.agendaDone;
   $('#cfg-pattern').value = state.config.groupPattern;
   $('#cfg-start').value = state.config.rangeStart;
   $('#cfg-end').value = state.config.rangeEnd;
@@ -428,6 +431,8 @@ function wire() {
   state.config = await loadConfig();
   state.plan = await loadPlan();
   state.group = state.config.group;
+  state.agendaAll = state.config.agendaAll;
+  state.agendaDone = state.config.agendaDone;
   fillConfigForm();
   wire();
   renderAgenda();
@@ -445,11 +450,20 @@ function wire() {
 
 const OPEN_STATUSES = new Set(['TODO', 'IN_PROGRESS', 'IN_REVIEW']);
 
+const isMine = (task) => (task.assignees ?? []).some((person) => person.id === state.me);
+
+function agendaScope() {
+  return state.agendaAll ? state.tasks : tasksOfGroup();
+}
+
 function myOpenTasks() {
-  const base = state.agendaAll ? state.tasks : tasksOfGroup();
-  return base.filter(
-    (task) => OPEN_STATUSES.has(task.status) && (task.assignees ?? []).some((person) => person.id === state.me),
-  );
+  return agendaScope().filter((task) => OPEN_STATUSES.has(task.status) && isMine(task));
+}
+
+// Lo que cerré, por el día en que se cerró. No entra al listado lateral: ya no
+// hay nada que planificar, solo deja ver en qué se fue cada día.
+function myDoneTasks() {
+  return agendaScope().filter((task) => isDone(task) && isMine(task) && closedAt(task));
 }
 
 function matches(task, query) {
@@ -462,13 +476,17 @@ function renderAgenda() {
   const mine = myOpenTasks();
   const pool = mine.filter((task) => !state.plan[task.id] && matches(task, state.agendaSearch));
 
+  const closed = state.agendaDone ? myDoneTasks() : [];
+
   $('#cal-title').textContent = monthTitle(state.calCursor);
-  $('#calendar').innerHTML = calendarHtml({ cursor: state.calCursor, plan: state.plan, tasks: mine });
+  $('#calendar').innerHTML = calendarHtml({ cursor: state.calCursor, plan: state.plan, tasks: mine, done: closed });
   $('#agenda-pool').innerHTML = poolHtml(pool);
 
   const planned = mine.filter((task) => state.plan[task.id]).length;
+  const resumen = [`${pool.length} sin agendar`, `${planned} en el calendario`];
+  if (state.agendaDone) resumen.push(`${closed.length} cerradas`);
   $('#agenda-count').textContent = state.me
-    ? `${pool.length} sin agendar · ${planned} en el calendario`
+    ? resumen.join(' · ')
     : 'No se pudo resolver tu usuario; revisa la API key.';
 }
 
@@ -494,10 +512,13 @@ function wireAgenda() {
     state.agendaSearch = event.target.value;
     renderAgenda();
   });
-  $('#agenda-all').addEventListener('change', (event) => {
-    state.agendaAll = event.target.checked;
-    renderAgenda();
-  });
+  for (const [id, campo] of [['#agenda-all', 'agendaAll'], ['#agenda-done', 'agendaDone']]) {
+    $(id).addEventListener('change', async (event) => {
+      state[campo] = event.target.checked;
+      state.config = await saveConfig({ [campo]: state[campo] });
+      renderAgenda();
+    });
+  }
 
   for (const zone of [$('#agenda-pool'), $('#calendar')]) {
     zone.addEventListener('dragstart', (event) => {
