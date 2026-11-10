@@ -18,6 +18,8 @@ const HOY = new Date();
 const DIA_CIERRE = new Date(HOY.getFullYear(), HOY.getMonth(), 4, 12, 0, 0);
 const CIERRE_YMD = `${DIA_CIERRE.getFullYear()}-${String(DIA_CIERRE.getMonth() + 1).padStart(2, '0')}-04`;
 
+const PROYECTOS = [{ id: 'p1', name: 'Proyecto Uno' }, { id: 'p2', name: 'Proyecto Dos' }];
+
 const TAREAS = [
   { id: 't1', title: 'Tarea en curso', status: 'IN_PROGRESS', priority: 'HIGH', progress: 50,
     dueDate: '2026-11-20T17:00:00.000Z', createdAt: '2026-10-01T00:00:00.000Z',
@@ -32,7 +34,7 @@ let n = 0;
 async function arrancar({ config = null, schedule = null, granted = true } = {}) {
   const dom = buildDocument(HTML);
   const { chrome, store } = buildChrome({ config, schedule, granted });
-  const { fetchDouble, calls } = buildFetch({ me: PERSONA, objectives: OBJETIVOS, tasks: TAREAS, projects: [{ id: 'p1', name: 'Proyecto Uno' }] });
+  const { fetchDouble, calls } = buildFetch({ me: PERSONA, objectives: OBJETIVOS, tasks: TAREAS, projects: PROYECTOS });
   globalThis.document = dom.document;
   globalThis.chrome = chrome;
   globalThis.fetch = fetchDouble;
@@ -162,6 +164,29 @@ async function arrancar({ config = null, schedule = null, granted = true } = {})
   assert.ok(!cuerpo().includes('Persona Uno'), 'volver a pulsar el objetivo lo pliega');
   await clic({ key: 'o:o1' }, ['pivot', 'is-expandable']);
   assert.ok(!cuerpo().includes('Tarea en curso'), 'y al reabrirlo las personas vuelven plegadas');
+}
+
+// 7. Cambiar de proyecto desde el encabezado, sin pasar por Configuracion.
+{
+  const app = await arrancar({
+    config: { apiKey: 'k', baseUrl: 'https://ejemplo.test/api/v1', projectId: 'p1', projectName: 'Proyecto Uno', group: 'entregable 2', groupPattern: '(entregable)\\s*\\d+', rangeStart: '', rangeEnd: '' },
+  });
+  const selector = app.$('project');
+  assert.ok(selector.innerHTML.includes('Proyecto Uno') && selector.innerHTML.includes('Proyecto Dos'),
+    'el encabezado lista los proyectos de la cuenta');
+  assert.equal(selector.value, 'p1');
+  assert.equal(app.$('cfg-project').value, 'p1', 'y el de Configuracion queda en el mismo');
+
+  const consultas = app.calls.length;
+  selector.value = 'p2';
+  await selector.dispatch('change', { target: selector });
+  await new Promise((r) => setTimeout(r, 30));
+
+  assert.equal(app.store.config.projectId, 'p2');
+  assert.equal(app.store.config.projectName, 'Proyecto Dos', 'guarda el nombre, no solo el id');
+  assert.equal(app.store.config.group, '', 'el grupo del proyecto anterior no se arrastra');
+  assert.ok(app.calls.length > consultas, 'vuelve a consultar la API');
+  assert.equal(app.$('cfg-project').value, 'p2', 'los dos desplegables quedan en el mismo proyecto');
 }
 
 console.log('OK: arranque del tablero');

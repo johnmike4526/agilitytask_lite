@@ -8,11 +8,21 @@
 </head>
 <body>
   <header class="top">
-    <div class="titles">
+    <div class="top-row">
       <h1>Agility Task Lite</h1>
-      <p id="project-name" class="muted">Sin proyecto seleccionado</p>
+      <nav class="tabs" role="tablist">
+        <button class="tab is-active" type="button" data-tab="resumen" role="tab">Resumen</button>
+        <button class="tab" type="button" data-tab="tareas" role="tab">Tareas</button>
+        <button class="tab" type="button" data-tab="agenda" role="tab">Agenda</button>
+        <button class="tab" type="button" data-tab="buscar" role="tab">Buscar</button>
+        <button class="tab" type="button" data-tab="config" role="tab">Configuración</button>
+      </nav>
     </div>
     <div class="controls">
+      <label class="field grow">
+        <span>Proyecto</span>
+        <select id="project"></select>
+      </label>
       <label class="field">
         <span>Grupo</span>
         <select id="deliverable"></select>
@@ -25,14 +35,6 @@
   <p id="status" class="status" hidden></p>
 
   <section id="kpis" class="kpis" hidden></section>
-
-  <nav class="tabs" role="tablist">
-    <button class="tab is-active" type="button" data-tab="resumen" role="tab">Resumen</button>
-    <button class="tab" type="button" data-tab="tareas" role="tab">Tareas</button>
-    <button class="tab" type="button" data-tab="agenda" role="tab">Agenda</button>
-    <button class="tab" type="button" data-tab="buscar" role="tab">Buscar</button>
-    <button class="tab" type="button" data-tab="config" role="tab">Configuración</button>
-  </nav>
 
   <main>
     <section id="panel-resumen" class="panel is-active">

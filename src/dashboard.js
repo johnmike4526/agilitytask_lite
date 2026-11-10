@@ -18,6 +18,7 @@ const STATUS_RANK = { IN_PROGRESS: 0, IN_REVIEW: 1, TODO: 2, COMPLETED: 3, DISCA
 const state = {
   config: null,
   objectives: [],
+  projects: [],
   tasks: [],
   groups: [],
   group: '',
@@ -131,6 +132,25 @@ async function refresh() {
 
 // ── Render ───────────────────────────────────────────────────────────────────
 
+// Los dos desplegables de proyecto se llenan de la misma lista: el del
+// encabezado para cambiar de proyecto sobre la marcha, el de Configuración para
+// el primer alta. Si la lista todavía no llegó, se muestra el guardado para no
+// dejar el encabezado vacío.
+function renderProjectSelects() {
+  const proyectos = state.projects.length
+    ? state.projects
+    : [{ id: state.config.projectId, name: state.config.projectName || state.config.projectId }].filter((p) => p.id);
+  const opciones = proyectos
+    .map((proyecto) => `<option value="${escapeHtml(proyecto.id)}">${escapeHtml(proyecto.name)}</option>`)
+    .join('');
+
+  for (const id of ['#project', '#cfg-project']) {
+    const select = $(id);
+    select.innerHTML = opciones;
+    select.value = state.config.projectId;
+  }
+}
+
 function renderGroupSelect() {
   const select = $('#deliverable');
   select.innerHTML = state.groups
@@ -148,7 +168,6 @@ function renderGroupSelect() {
 
 function render() {
   const tasks = tasksOfGroup();
-  $('#project-name').textContent = state.config.projectName || state.config.projectId;
   renderKpis(tasks);
   renderBurndown(tasks);
   renderWorkload(tasks);
@@ -295,6 +314,21 @@ function renderTasks(tasks) {
 
 // ── Configuración ────────────────────────────────────────────────────────────
 
+// Cambiar de proyecto invalida el grupo elegido y el árbol abierto del pivote:
+// son de otro proyecto.
+async function switchProject(projectId) {
+  const elegido = state.projects.find((proyecto) => proyecto.id === projectId);
+  state.config = await saveConfig({
+    projectId,
+    projectName: elegido?.name ?? projectId,
+    group: '',
+  });
+  state.group = '';
+  state.expanded.clear();
+  renderProjectSelects();
+  await refresh();
+}
+
 function fillConfigForm() {
   $('#cfg-base').value = state.config.baseUrl;
   $('#cfg-key').value = state.config.apiKey;
@@ -303,11 +337,7 @@ function fillConfigForm() {
   $('#cfg-pattern').value = state.config.groupPattern;
   $('#cfg-start').value = state.config.rangeStart;
   $('#cfg-end').value = state.config.rangeEnd;
-  const select = $('#cfg-project');
-  if (state.config.projectId && !select.options.length) {
-    select.innerHTML = `<option value="${escapeHtml(state.config.projectId)}">${escapeHtml(state.config.projectName || state.config.projectId)}</option>`;
-  }
-  select.value = state.config.projectId;
+  renderProjectSelects();
 }
 
 function formConfig() {
@@ -320,12 +350,9 @@ async function loadProjects() {
     status.textContent = 'Cargando proyectos…';
     const config = formConfig();
     await ensureHostAccess(config.baseUrl);
-    const projects = await new AgilityClient(config).projects();
-    $('#cfg-project').innerHTML = projects
-      .map((project) => `<option value="${escapeHtml(project.id)}">${escapeHtml(project.name)}</option>`)
-      .join('');
-    if (state.config.projectId) $('#cfg-project').value = state.config.projectId;
-    status.textContent = `${projects.length} proyectos disponibles.`;
+    state.projects = await new AgilityClient(config).projects();
+    renderProjectSelects();
+    status.textContent = `${state.projects.length} proyectos disponibles.`;
   } catch (error) {
     status.textContent = error.message;
   }
@@ -344,6 +371,8 @@ function showTab(name) {
 
 function wire() {
   $('#refresh').addEventListener('click', refresh);
+
+  $('#project').addEventListener('change', (event) => switchProject(event.target.value));
 
   $('#deliverable').addEventListener('change', (event) => {
     state.group = event.target.value;
@@ -426,12 +455,13 @@ function wire() {
     state.config = await saveConfig({
       ...formConfig(),
       projectId: select.value,
-      projectName: select.selectedOptions[0]?.textContent ?? '',
+      projectName: state.projects.find((proyecto) => proyecto.id === select.value)?.name ?? select.value,
       groupPattern: $('#cfg-pattern').value.trim(),
       rangeStart: $('#cfg-start').value,
       rangeEnd: $('#cfg-end').value,
     });
     $('#config-status').textContent = 'Guardado.';
+    renderProjectSelects();
     await refresh();
   });
 }

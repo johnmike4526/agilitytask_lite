@@ -266,3 +266,27 @@ tr.lvl-1 .pivot-label { color: var(--text); font-size: 12.5px; }
 tr.lvl-2 .pivot-label { color: var(--muted); font-size: 12.5px; }
 tr.lvl-1 > td, tr.lvl-2 > td { background: color-mix(in srgb, var(--border) 18%, transparent); }
 tr.lvl-2 > td { background: color-mix(in srgb, var(--border) 9%, transparent); }
+
+/* ── Encabezado: título y pestañas arriba, selectores debajo ────────────── */
+.top { display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
+.top-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+
+.tabs { margin: 0; gap: 2px; border-bottom: none; flex-wrap: wrap; }
+.tab { padding: 6px 12px; border-radius: 8px; border-bottom: none; }
+.tab:hover { color: var(--text); }
+.tab.is-active {
+  border-bottom: none;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+.controls {
+  flex-wrap: wrap;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 14px;
+}
+.controls .field { min-width: 180px; }
+.controls .field.grow { flex: 1 1 280px; }
+.controls select { width: 100%; }
+#refresh { margin-left: auto; }

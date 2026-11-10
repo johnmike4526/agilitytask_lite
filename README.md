@@ -33,6 +33,11 @@ vuelve a pedirlo desde Configuración.
 
 ## Qué muestra
 
+- **Encabezado**: las pestañas van arriba a la derecha; debajo, los selectores
+  de proyecto y de grupo, y el botón Actualizar. El de proyecto lista los
+  proyectos que ve la cuenta de la API key, así que se cambia de proyecto sin
+  entrar a Configuración; al cambiarlo se reinicia el grupo elegido y el árbol
+  abierto del pivote, que son del proyecto anterior.
 - **Selector de grupo**: junta los objetivos que comparten una convención de
   nombre, de modo que un entregable repartido en varios objetivos se ve como
   uno solo. Ver «Agrupación de objetivos» más abajo.
@@ -157,6 +162,8 @@ y de las APIs de `chrome` —unas cien líneas— que permite arrancar
   soltar una tarea en un día la guarda en `chrome.storage`; el doble clic abre
   el tab Buscar con el detalle; y la casilla de tareas cerradas las dibuja en su
   día y recuerda la elección al reabrir; y el pivote de objetivos abre un nivel
-  por pulsación hasta llegar al detalle de la tarea. El doble de DOM devuelve `null` para un
+  por pulsación hasta llegar al detalle de la tarea; y cambiar de proyecto desde
+  el encabezado guarda el nuevo, limpia el grupo anterior y vuelve a consultar.
+  El doble de DOM devuelve `null` para un
   id que no exista en `dashboard.html`, así que un id mal escrito también falla
   aquí.
