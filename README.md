@@ -37,7 +37,10 @@ vuelve a pedirlo desde Configuración.
   de proyecto y de grupo, y el botón Actualizar. El de proyecto lista los
   proyectos que ve la cuenta de la API key, así que se cambia de proyecto sin
   entrar a Configuración; al cambiarlo se reinicia el grupo elegido y el árbol
-  abierto del pivote, que son del proyecto anterior.
+  abierto del pivote, que son del proyecto anterior. Si ningún objetivo del
+  proyecto encaja con el patrón de agrupación, aparece un icono de aviso junto a
+  los selectores; el detalle está en su tooltip, al pasar el ratón o al enfocarlo
+  con el teclado.
 - **Selector de grupo**: junta los objetivos que comparten una convención de
   nombre, de modo que un entregable repartido en varios objetivos se ve como
   uno solo. Ver «Agrupación de objetivos» más abajo.

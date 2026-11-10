@@ -290,3 +290,47 @@ tr.lvl-2 > td { background: color-mix(in srgb, var(--border) 9%, transparent); }
 .controls .field.grow { flex: 1 1 280px; }
 .controls select { width: 100%; }
 #refresh { margin-left: auto; }
+
+/* ── Aviso con tooltip ──────────────────────────────────────────────────── */
+.warn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 7px;
+  color: var(--amber);
+  cursor: help;
+  border-radius: 50%;
+}
+.warn[hidden] { display: none; }
+.warn svg { width: 19px; height: 19px; fill: currentColor; }
+.warn .warn-mark { fill: var(--surface); }
+.warn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.warn::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  right: -4px;
+  z-index: 5;
+  width: max-content;
+  max-width: 300px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 6px 20px rgb(0 0 0 / .14);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-3px);
+  transition: opacity .12s ease, transform .12s ease, visibility .12s;
+}
+.warn:hover::after, .warn:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}

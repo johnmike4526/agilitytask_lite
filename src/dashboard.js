@@ -161,9 +161,13 @@ function renderGroupSelect() {
     })
     .join('');
   select.value = state.group;
-  $('#group-mode').textContent = state.groupMode === 'patron'
+  const aviso = $('#group-mode');
+  const mensaje = state.groupMode === 'patron'
     ? ''
-    : 'Ningún objetivo encaja con el patrón: se agrupa por objetivo.';
+    : 'Ningún objetivo de este proyecto encaja con el patrón de agrupación, así que cada objetivo se muestra por separado. El patrón se cambia en Configuración.';
+  aviso.dataset.tip = mensaje;
+  aviso.setAttribute('aria-label', mensaje);
+  aviso.hidden = !mensaje;
 }
 
 function render() {

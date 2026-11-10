@@ -9,6 +9,7 @@ class El {
     this.dataset = dataset;
     this.classes = new Set();
     this.listeners = new Map();
+    this.attributes = new Map();
     this.innerHTML = '';
     this.textContent = '';
     this.value = '';
@@ -38,6 +39,10 @@ class El {
       await handler({ target: this, preventDefault() {}, ...event });
     }
   }
+
+  setAttribute(name, value) { this.attributes.set(name, String(value)); }
+  getAttribute(name) { return this.attributes.get(name) ?? null; }
+  removeAttribute(name) { this.attributes.delete(name); }
 
   closest() { return this; }
   scrollIntoView() {}

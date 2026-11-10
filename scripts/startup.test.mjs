@@ -74,6 +74,19 @@ async function arrancar({ config = null, schedule = null, granted = true } = {})
   assert.match(app.$('calendar').innerHTML, /data-day=/, 'dibuja el calendario');
   assert.match(app.$('agenda-count').textContent, /sin agendar/);
   assert.match(app.$('find-count').textContent, /2 tareas/);
+  assert.equal(app.$('group-mode').hidden, true, 'con patron que encaja no hay aviso');
+}
+
+// 2b. Sin convencion de nombres el aviso aparece, y lleva el texto en el tooltip.
+{
+  const app = await arrancar({
+    config: { apiKey: 'k', baseUrl: 'https://ejemplo.test/api/v1', projectId: 'p1', group: '', groupPattern: 'NO-ENCAJA-\\d+', rangeStart: '', rangeEnd: '' },
+  });
+  const aviso = app.$('group-mode');
+  assert.equal(aviso.hidden, false, 'se muestra el icono');
+  assert.match(aviso.dataset.tip, /cada objetivo se muestra por separado/);
+  assert.equal(aviso.getAttribute('aria-label'), aviso.dataset.tip, 'el lector de pantalla lee lo mismo que el tooltip');
+  assert.equal(aviso.textContent, '', 'el mensaje ya no se imprime en linea');
 }
 
 // 3. Soltar una tarea en un día la guarda en la agenda local.
