@@ -41,6 +41,13 @@ vuelve a pedirlo desde Configuración.
   calcula en cada consulta; no hay histórico guardado.
 - **Tareas por desarrollador**: barras apiladas por estado y tabla con
   completadas / en revisión / en curso / por hacer / vencidas / % de avance.
+- **Objetivos del entregable**: tabla pivote de tres niveles. Cada objetivo se
+  expande en las personas que lo trabajan, con sus propias tareas, completadas,
+  vencidas y % de avance; cada persona se expande en sus tareas, y pulsar una
+  abre su detalle en el tab Buscar. Una tarea con dos asignados cuenta y
+  aparece bajo cada uno, así que la suma de las personas puede superar el total
+  del objetivo. Plegar un objetivo pliega también las personas que colgaban de
+  él.
 - **Tabla de tareas**: Id, Prioridad, Tarea, Asignado, % Avance, Fecha con
   semáforo y Estado. Ordenable por cualquier columna; filtros por texto,
   asignado, estado y vencimiento.
@@ -142,12 +149,14 @@ y de las APIs de `chrome` —unas cien líneas— que permite arrancar
   agrupación de objetivos (convención, sin convención, patrón propio o
   inválido) y la forma de la curva de burndown.
 - `view.test.mjs`: la grilla del calendario, que lo agendado caiga en su día,
-  el aviso de vencimiento, el detalle de tarea y el escapado de HTML en títulos
-  y descripciones.
+  el aviso de vencimiento, el detalle de tarea, el pivote de objetivos (qué se
+  ve en cada nivel, la tarea compartida bajo sus dos dueños, la descartada
+  fuera) y el escapado de HTML en títulos y descripciones.
 - `startup.test.mjs`: el arranque completo del tablero. Sin configuración no
   revienta y no llama a la API; con configuración consulta, agrupa y pinta;
   soltar una tarea en un día la guarda en `chrome.storage`; el doble clic abre
   el tab Buscar con el detalle; y la casilla de tareas cerradas las dibuja en su
-  día y recuerda la elección al reabrir. El doble de DOM devuelve `null` para un
+  día y recuerda la elección al reabrir; y el pivote de objetivos abre un nivel
+  por pulsación hasta llegar al detalle de la tarea. El doble de DOM devuelve `null` para un
   id que no exista en `dashboard.html`, así que un id mal escrito también falla
   aquí.

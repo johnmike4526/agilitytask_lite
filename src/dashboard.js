@@ -1,6 +1,7 @@
 import { AgilityClient } from './api.js';
 import { loadConfig, saveConfig } from './store.js';
-import { burndownSvg, workloadBars, escapeHtml } from './charts.js';
+import { burndownSvg, workloadBars, escapeHtml, meterHtml } from './charts.js';
+import { pivotHtml } from './pivot.js';
 import {
   PRIORITY_LABEL, STATUS_LABEL, burndown, defaultRange, groupObjectives,
   closedAt, dueState, isCounted, isDone, percent, perDeveloper, summarize,
@@ -29,6 +30,7 @@ const state = {
   agendaSearch: '',
   agendaAll: false,
   agendaDone: false,
+  expanded: new Set(),
   findQuery: '',
   findSelected: null,
 };
@@ -44,13 +46,6 @@ function note(message, isError = false) {
 
 const shortId = (id) => String(id ?? '').slice(-6).toUpperCase();
 const assigneeNames = (task) => (task.assignees ?? []).map((a) => a.name).filter(Boolean);
-
-function meter(value) {
-  return `<span class="meter">
-    <span class="meter-track"><span class="meter-fill${value >= 100 ? ' full' : ''}" style="width:${Math.min(100, value)}%"></span></span>
-    <b>${value}%</b>
-  </span>`;
-}
 
 // El manifest ya no fija el host: se pide permiso para el que se configure, y
 // solo para ese. chrome.permissions.request exige un gesto del usuario, de ahí
@@ -213,25 +208,19 @@ function renderWorkload(tasks) {
         <td class="num">${row.inProgress}</td>
         <td class="num">${row.todo}</td>
         <td class="num">${row.overdue || ''}</td>
-        <td>${meter(row.progress)}</td>
+        <td>${meterHtml(row.progress)}</td>
       </tr>`)
     .join('');
 }
 
+const tasksOfObjective = (objectiveId) => state.tasks.filter((task) => task.objectiveId === objectiveId);
+
 function renderObjectives() {
-  const rows = objectivesOfGroup().map((objective) => {
-    const tasks = state.tasks.filter((task) => task.objectiveId === objective.id);
-    const stats = summarize(tasks);
-    return `
-      <tr>
-        <td>${escapeHtml(objective.title)}</td>
-        <td class="num">${stats.total}</td>
-        <td class="num">${stats.done}</td>
-        <td class="num">${stats.overdue || ''}</td>
-        <td>${meter(stats.progress)}</td>
-      </tr>`;
+  $('#objectives-table tbody').innerHTML = pivotHtml({
+    objectives: objectivesOfGroup(),
+    tasksOf: tasksOfObjective,
+    expanded: state.expanded,
   });
-  $('#objectives-table tbody').innerHTML = rows.join('') || '<tr><td colspan="5" class="empty">Sin objetivos.</td></tr>';
 }
 
 function renderAssigneeFilter(tasks) {
@@ -295,7 +284,7 @@ function renderTasks(tasks) {
         <td><span class="tag prio-${task.priority}">${PRIORITY_LABEL[task.priority] ?? task.priority}</span></td>
         <td class="task-title">${escapeHtml(task.title)}</td>
         <td>${names.length ? escapeHtml(names.join(', ')) : '<span class="muted">Sin asignar</span>'}</td>
-        <td>${meter(percent(task))}</td>
+        <td>${meterHtml(percent(task))}</td>
         <td class="date ${light === 'overdue' ? 'overdue' : ''}" title="${hint}">
           <i class="light ${light}"></i>${task.dueDate ? dateFmt.format(new Date(task.dueDate)) : '—'}
         </td>
@@ -401,6 +390,26 @@ function wire() {
   });
 
   $('#load-projects').addEventListener('click', loadProjects);
+
+  $('#objectives-table').addEventListener('click', (event) => {
+    const fila = event.target.closest('.pivot');
+    if (!fila) return;
+    if (fila.dataset.task) {
+      openInFinder(fila.dataset.task);
+      return;
+    }
+    if (!fila.classList.contains('is-expandable')) return;
+    const key = fila.dataset.key;
+    if (state.expanded.has(key)) {
+      // Cerrar un objetivo cierra también las personas que colgaban de él.
+      for (const abierta of [...state.expanded]) {
+        if (abierta === key || abierta.startsWith(`${key}:`)) state.expanded.delete(abierta);
+      }
+    } else {
+      state.expanded.add(key);
+    }
+    renderObjectives();
+  });
 
   wireAgenda();
   wireFind();

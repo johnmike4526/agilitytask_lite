@@ -127,4 +127,41 @@ async function arrancar({ config = null, schedule = null, granted = true } = {})
   assert.ok(vuelta.$('calendar').innerHTML.includes('Tarea cerrada'));
 }
 
+// 6. El pivote de objetivos: expandir objetivo, expandir persona, abrir tarea.
+{
+  // Con el patron por convencion los dos objetivos caen en el mismo grupo, que
+  // es lo que pone a las dos tareas bajo el mismo pivote.
+  const app = await arrancar({
+    config: { apiKey: 'k', baseUrl: 'https://ejemplo.test/api/v1', projectId: 'p1', group: '', groupPattern: '(entregable)\\s*\\d+', rangeStart: '', rangeEnd: '' },
+  });
+  const tabla = app.$('objectives-table');
+  const cuerpo = () => tabla.sub.innerHTML;
+  const clic = async (dataset, clases = []) => {
+    const fila = new app.El('', dataset);
+    for (const c of clases) fila.classes.add(c);
+    await tabla.dispatch('click', { target: fila });
+  };
+
+  assert.ok(cuerpo().includes('data-key="o:o1"'), 'arranca mostrando los objetivos');
+  assert.ok(!cuerpo().includes('Persona Uno'), 'plegado, sin personas');
+
+  await clic({ key: 'o:o1' }, ['pivot', 'is-expandable']);
+  assert.ok(cuerpo().includes('Persona Uno'), 'al expandir el objetivo aparece quien lo trabaja');
+  assert.ok(!cuerpo().includes('Tarea en curso'), 'todavia sin tareas');
+
+  await clic({ key: 'o:o1:p:u1' }, ['pivot', 'is-expandable']);
+  assert.ok(cuerpo().includes('Tarea en curso'), 'al expandir la persona aparecen sus tareas');
+  assert.ok(cuerpo().includes('data-task="t1"'));
+
+  await clic({ task: 't1' }, ['pivot', 'is-task']);
+  const buscar = app.tabs.find((t) => t.dataset.tab === 'buscar');
+  assert.ok(buscar.classes.has('is-active'), 'la tarea lleva al tab Buscar');
+  assert.match(app.$('find-detail').innerHTML, /Tarea en curso/);
+
+  await clic({ key: 'o:o1' }, ['pivot', 'is-expandable']);
+  assert.ok(!cuerpo().includes('Persona Uno'), 'volver a pulsar el objetivo lo pliega');
+  await clic({ key: 'o:o1' }, ['pivot', 'is-expandable']);
+  assert.ok(!cuerpo().includes('Tarea en curso'), 'y al reabrirlo las personas vuelven plegadas');
+}
+
 console.log('OK: arranque del tablero');

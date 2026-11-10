@@ -1,4 +1,4 @@
-import { escapeHtml } from './charts.js';
+import { escapeHtml, meterHtml } from './charts.js';
 import { PRIORITY_LABEL, STATUS_LABEL, dueState, percent } from './model.js';
 
 const dateFmt = new Intl.DateTimeFormat('es-PA', { dateStyle: 'medium' });
@@ -35,7 +35,7 @@ export function detailHtml(task, { objectiveTitle, plannedDay } = {}) {
     </header>
 
     <dl class="fields">
-      ${field('Avance', `<span class="meter"><span class="meter-track"><span class="meter-fill${percent(task) >= 100 ? ' full' : ''}" style="width:${percent(task)}%"></span></span><b>${percent(task)}%</b></span>`)}
+      ${field('Avance', meterHtml(percent(task)))}
       ${field('Asignado', names || '<span class="muted">Sin asignar</span>')}
       ${field('Fecha límite', `<i class="light ${light}"></i>${stamp(task.dueDate, dateFmt)} <span class="muted">${lightLabel}</span>`)}
       ${extended}

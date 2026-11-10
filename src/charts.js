@@ -95,3 +95,10 @@ export function workloadBars(rows) {
   const legend = SEGMENTS.map((segment) => `<span><i class="swatch ${segment.css}"></i>${segment.label}</span>`).join('');
   return `<div class="bars">${bars}</div><div class="legend">${legend}</div>`;
 }
+
+export function meterHtml(value) {
+  return `<span class="meter">
+    <span class="meter-track"><span class="meter-fill${value >= 100 ? ' full' : ''}" style="width:${Math.min(100, value)}%"></span></span>
+    <b>${value}%</b>
+  </span>`;
+}

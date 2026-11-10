@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { calendarHtml, poolHtml } from '../src/agenda.js';
 import { detailHtml } from '../src/detail.js';
+import { pivotHtml } from '../src/pivot.js';
 import { monthGrid, ymd } from '../src/schedule.js';
 
 const persona = { id: 'u1', name: 'Persona Uno' };
@@ -72,6 +73,42 @@ for (const needle of ['Ajustar el balanceador', 'Entregable 2', 'subtarea de', '
 assert.ok(detail.includes('Linea &lt;2&gt;'), 'la descripción va escapada');
 assert.ok(detailHtml(tasks[1], {}).includes('sin agendar'));
 assert.ok(detailHtml(tasks[1], {}).includes('sin objetivo'));
+
+// Pivote objetivo › persona › tarea
+const otra = { id: 'u2', name: 'Persona Dos' };
+const delObjetivo = [
+  { id: 'p1', title: 'Compartida entre dos', status: 'IN_PROGRESS', priority: 'HIGH', progress: 40,
+    dueDate: '2026-12-01T17:00:00.000Z', assignees: [persona, otra] },
+  { id: 'p2', title: 'Solo de Uno <b>', status: 'COMPLETED', priority: 'LOW', progress: 100,
+    dueDate: '2026-10-01T17:00:00.000Z', assignees: [persona] },
+  { id: 'p3', title: 'Sin dueño', status: 'TODO', priority: 'LOW', progress: 0, dueDate: null, assignees: [] },
+  { id: 'p4', title: 'Descartada', status: 'DISCARDED', priority: 'LOW', progress: 0, dueDate: null, assignees: [persona] },
+];
+const objetivos = [{ id: 'obj1', title: 'Entregable 3 - Documentación' }, { id: 'obj2', title: 'Entregable 3 - Vacío' }];
+const tasksOf = (id) => (id === 'obj1' ? delObjetivo : []);
+
+const plegado = pivotHtml({ objectives: objetivos, tasksOf, expanded: new Set() });
+assert.equal((plegado.match(/class="pivot /g) ?? []).length, 2, 'plegado solo muestra los objetivos');
+assert.ok(plegado.includes('data-key="o:obj1"'));
+assert.ok(!plegado.includes('Persona Uno'), 'sin expandir no se ven las personas');
+assert.ok(plegado.includes('is-expandable'), 'el objetivo con tareas se puede expandir');
+const vacio = plegado.slice(plegado.indexOf('data-key="o:obj2"') - 120, plegado.indexOf('data-key="o:obj2"') + 60);
+assert.ok(!vacio.includes('is-expandable'), 'un objetivo sin tareas no ofrece expandir');
+
+const conPersonas = pivotHtml({ objectives: objetivos, tasksOf, expanded: new Set(['o:obj1']) });
+assert.ok(conPersonas.includes('Persona Uno') && conPersonas.includes('Persona Dos'));
+assert.ok(conPersonas.includes('Sin asignar'), 'lo no asignado también es una fila');
+assert.ok(!conPersonas.includes('Compartida entre dos'), 'las tareas aún no');
+const uno = conPersonas.slice(conPersonas.indexOf('data-key="o:obj1:p:u1"'), conPersonas.indexOf('data-key="o:obj1:p:u2"'));
+assert.match(uno, />2</, 'Persona Uno: 2 tareas contadas, la descartada queda fuera');
+
+const conTareas = pivotHtml({ objectives: objetivos, tasksOf, expanded: new Set(['o:obj1', 'o:obj1:p:u1', 'o:obj1:p:u2']) });
+assert.ok(conTareas.includes('data-task="p1"'), 'la tarea es pinchable');
+assert.equal((conTareas.match(/data-task="p1"/g) ?? []).length, 2, 'la compartida aparece bajo sus dos dueños');
+assert.ok(!conTareas.includes('Descartada'), 'la descartada no se lista');
+assert.ok(conTareas.includes('Solo de Uno &lt;b&gt;'), 'el título va escapado');
+
+assert.match(pivotHtml({ objectives: [], tasksOf, expanded: new Set() }), /Sin objetivos/);
 
 assert.equal(ymd(new Date(2026, 10, 3)), '2026-11-03');
 console.log('OK: vistas de agenda y detalle');
