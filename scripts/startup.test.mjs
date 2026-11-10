@@ -84,7 +84,13 @@ async function arrancar({ config = null, schedule = null, granted = true } = {})
   });
   const aviso = app.$('group-mode');
   assert.equal(aviso.hidden, false, 'se muestra el icono');
-  assert.match(aviso.dataset.tip, /cada objetivo se muestra por separado/);
+  const grupos = app.$('deliverable');
+  assert.ok(grupos.innerHTML.startsWith('<option value="__todos__">Mostrar todos'), 'arranca en Mostrar todos');
+  assert.match(grupos.innerHTML, /Mostrar todos · 3 objetivos/);
+  assert.equal(grupos.value, '__todos__', 'y es el seleccionado por defecto');
+  assert.ok(grupos.innerHTML.includes('reuniones'), 'los objetivos sueltos siguen disponibles');
+  assert.match(app.$('kpis').innerHTML, /<b>2<\/b><span>Tareas/, 'el resumen suma las tareas de todos los objetivos');
+  assert.match(aviso.dataset.tip, /Mostrar todos/);
   assert.equal(aviso.getAttribute('aria-label'), aviso.dataset.tip, 'el lector de pantalla lee lo mismo que el tooltip');
   assert.equal(aviso.textContent, '', 'el mensaje ya no se imprime en linea');
 }

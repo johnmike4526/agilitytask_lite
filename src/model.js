@@ -28,6 +28,7 @@ export const percent = (task) => (isDone(task) ? 100 : Number(task.progress) || 
 export const DEFAULT_GROUP_PATTERN = '(entregable|fase|hito|sprint|etapa|release)\\s*\\d+';
 
 const OTHERS = '__otros__';
+export const ALL = '__todos__';
 
 function safePattern(source) {
   if (!source || !source.trim()) return null;
@@ -80,12 +81,13 @@ export function groupObjectives(objectives, patternSource = DEFAULT_GROUP_PATTER
   }
 
   if (!groups.size) {
-    return {
-      mode: 'objetivo',
-      groups: objectives
-        .map((objective) => ({ key: objective.id, label: objective.title ?? objective.id, objectives: [objective] }))
-        .sort(byLabel),
-    };
+    // Sin convención no hay entregables que armar, así que la opción por defecto
+    // es verlo todo junto; los objetivos sueltos quedan debajo para enfocar uno.
+    const sueltos = objectives
+      .map((objective) => ({ key: objective.id, label: objective.title ?? objective.id, objectives: [objective] }))
+      .sort(byLabel);
+    const todos = { key: ALL, label: 'Mostrar todos', objectives: [...objectives] };
+    return { mode: 'objetivo', groups: objectives.length > 1 ? [todos, ...sueltos] : sueltos };
   }
 
   if (loose.length) groups.set(OTHERS, { key: OTHERS, label: 'Sin agrupar', objectives: loose });

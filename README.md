@@ -107,8 +107,10 @@ después de «Sprint 2», no antes. Los objetivos del proyecto que no coincidan
 quedan en un grupo «Sin agrupar» al final.
 
 Si el proyecto no tiene ninguna convención —ningún objetivo coincide, o dejas el
-patrón en blanco— cada objetivo pasa a ser su propio grupo y el tablero funciona
-igual, objetivo por objetivo. Un patrón inválido se trata como patrón en blanco,
+patrón en blanco— el selector arranca en **«Mostrar todos»**, que junta todos los
+objetivos del proyecto, y debajo quedan los objetivos sueltos por si quieres
+mirar uno solo. Con un único objetivo no se agrega «Mostrar todos», que sería el
+mismo grupo repetido. Un patrón inválido se trata como patrón en blanco,
 no rompe la vista. Para una convención propia basta con escribirla:
 `EPIC-\d+`, `R\d+\.\d+`, lo que use el equipo.
 

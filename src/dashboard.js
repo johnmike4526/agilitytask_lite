@@ -156,7 +156,7 @@ function renderGroupSelect() {
   select.innerHTML = state.groups
     .map((group) => {
       const count = group.objectives.length;
-      const suffix = state.groupMode === 'patron' ? ` · ${count} objetivo${count === 1 ? '' : 's'}` : '';
+      const suffix = count > 1 ? ` · ${count} objetivo${count === 1 ? '' : 's'}` : '';
       return `<option value="${escapeHtml(group.key)}">${escapeHtml(group.label)}${suffix}</option>`;
     })
     .join('');
@@ -164,7 +164,7 @@ function renderGroupSelect() {
   const aviso = $('#group-mode');
   const mensaje = state.groupMode === 'patron'
     ? ''
-    : 'Ningún objetivo de este proyecto encaja con el patrón de agrupación, así que cada objetivo se muestra por separado. El patrón se cambia en Configuración.';
+    : 'Ningún objetivo de este proyecto encaja con el patrón de agrupación. Se abre en «Mostrar todos», con cada objetivo disponible por separado en la lista. El patrón se cambia en Configuración.';
   aviso.dataset.tip = mensaje;
   aviso.setAttribute('aria-label', mensaje);
   aviso.hidden = !mensaje;

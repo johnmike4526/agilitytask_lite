@@ -71,14 +71,19 @@ const porSprint = groupObjectives([
 ]);
 assert.deepEqual(porSprint.groups.map((g) => g.label), ['Fase 1', 'Sprint 2', 'Sprint 10'], '10 va después de 2');
 
-// Sin convención: cada objetivo es su propio grupo
+// Sin convención: «Mostrar todos» primero, y cada objetivo suelto debajo
 const sinConvencion = groupObjectives([
   { id: 'a', title: 'Backend de notificaciones' },
   { id: 'b', title: 'App móvil' },
 ]);
 assert.equal(sinConvencion.mode, 'objetivo');
-assert.deepEqual(sinConvencion.groups.map((g) => g.label), ['App móvil', 'Backend de notificaciones']);
-assert.equal(sinConvencion.groups[0].objectives.length, 1);
+assert.deepEqual(sinConvencion.groups.map((g) => g.label), ['Mostrar todos', 'App móvil', 'Backend de notificaciones']);
+assert.equal(sinConvencion.groups[0].objectives.length, 2, 'el grupo por defecto trae todo junto');
+assert.equal(sinConvencion.groups[1].objectives.length, 1);
+
+// Con un solo objetivo, «Mostrar todos» seria el mismo grupo repetido
+const unico = groupObjectives([{ id: 'a', title: 'Backend de notificaciones' }]);
+assert.deepEqual(unico.groups.map((g) => g.label), ['Backend de notificaciones']);
 
 // Patrón vacío o inválido: también cae a un grupo por objetivo, sin reventar
 for (const patron of ['', '   ', '(((']) {
