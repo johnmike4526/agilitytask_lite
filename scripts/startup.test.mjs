@@ -156,7 +156,7 @@ async function arrancar({ config = null, schedule = null, granted = true } = {})
     config: { apiKey: 'k', baseUrl: 'https://ejemplo.test/api/v1', projectId: 'p1', group: '', groupPattern: '(entregable)\\s*\\d+', rangeStart: '', rangeEnd: '' },
   });
   const tabla = app.$('objectives-table');
-  const cuerpo = () => tabla.sub.innerHTML;
+  const cuerpo = () => tabla.subs.get('tbody').innerHTML;
   const clic = async (dataset, clases = []) => {
     const fila = new app.El('', dataset);
     for (const c of clases) fila.classes.add(c);
@@ -206,6 +206,44 @@ async function arrancar({ config = null, schedule = null, granted = true } = {})
   assert.equal(app.store.config.group, '', 'el grupo del proyecto anterior no se arrastra');
   assert.ok(app.calls.length > consultas, 'vuelve a consultar la API');
   assert.equal(app.$('cfg-project').value, 'p2', 'los dos desplegables quedan en el mismo proyecto');
+}
+
+// 8. Los filtros de la tabla de tareas aceptan varias opciones a la vez.
+{
+  const app = await arrancar({
+    config: { apiKey: 'k', baseUrl: 'https://ejemplo.test/api/v1', projectId: 'p1', group: '', groupPattern: '(entregable)\\s*\\d+', rangeStart: '', rangeEnd: '' },
+  });
+  const filtro = app.$('filter-status');
+  const resumen = () => filtro.subs.get('.multi-text').textContent;
+  const marcar = async (value, checked) => {
+    const casilla = new app.El('', {});
+    casilla.value = value;
+    casilla.checked = checked;
+    await filtro.dispatch('change', { target: casilla });
+  };
+
+  assert.equal(resumen(), 'Todos los estados');
+  assert.equal(app.$('filters-clear').hidden, true, 'sin filtros no hay boton de limpiar');
+  assert.match(app.$('task-count').textContent, /2 de 2 tareas/);
+
+  await marcar('TODO', true);
+  assert.equal(resumen(), 'Por hacer', 'con una marcada muestra su etiqueta');
+  assert.match(app.$('task-count').textContent, /0 de 2 tareas/, 'ninguna tarea esta por hacer');
+  assert.equal(app.$('filters-clear').hidden, false);
+
+  await marcar('IN_PROGRESS', true);
+  await marcar('COMPLETED', true);
+  assert.equal(resumen(), '3 estados', 'con varias, el conteo');
+  assert.match(app.$('task-count').textContent, /2 de 2 tareas/, 'la seleccion suma, no intersecta');
+  assert.ok(filtro.classes.has('has-filter'), 'el desplegable se marca como filtrado');
+
+  await marcar('TODO', false);
+  assert.equal(resumen(), '2 estados', 'desmarcar quita solo esa');
+
+  await app.$('filters-clear').dispatch('click', {});
+  assert.equal(resumen(), 'Todos los estados', 'limpiar deja los tres filtros en blanco');
+  assert.equal(app.$('filters-clear').hidden, true);
+  assert.ok(!filtro.classes.has('has-filter'));
 }
 
 console.log('OK: arranque del tablero');

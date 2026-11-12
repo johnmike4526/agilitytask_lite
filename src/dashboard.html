@@ -90,21 +90,19 @@
       <article class="card">
         <header class="card-head filters">
           <input id="search" type="search" placeholder="Buscar por tarea o Id…" />
-          <select id="filter-assignee"><option value="">Todos los asignados</option></select>
-          <select id="filter-status">
-            <option value="">Todos los estados</option>
-            <option value="TODO">Por hacer</option>
-            <option value="IN_PROGRESS">En curso</option>
-            <option value="IN_REVIEW">En revisión</option>
-            <option value="COMPLETED">Completada</option>
-            <option value="DISCARDED">Descartada</option>
-          </select>
-          <select id="filter-due">
-            <option value="">Cualquier fecha</option>
-            <option value="overdue">Vencidas</option>
-            <option value="soon">Por vencer (3 días)</option>
-            <option value="none">Sin fecha</option>
-          </select>
+          <details class="multi" id="filter-assignee">
+            <summary><span class="multi-text">Todos los asignados</span></summary>
+            <div class="multi-menu"></div>
+          </details>
+          <details class="multi" id="filter-status">
+            <summary><span class="multi-text">Todos los estados</span></summary>
+            <div class="multi-menu"></div>
+          </details>
+          <details class="multi" id="filter-due">
+            <summary><span class="multi-text">Cualquier fecha</span></summary>
+            <div class="multi-menu"></div>
+          </details>
+          <button id="filters-clear" class="secondary" type="button" hidden>Limpiar filtros</button>
           <span id="task-count" class="muted"></span>
         </header>
         <div class="table-wrap">

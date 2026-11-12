@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { calendarHtml, poolHtml } from '../src/agenda.js';
 import { detailHtml } from '../src/detail.js';
 import { pivotHtml } from '../src/pivot.js';
+import { menuHtml, summaryText, toggle } from '../src/multiselect.js';
 import { monthGrid, ymd } from '../src/schedule.js';
 
 const persona = { id: 'u1', name: 'Persona Uno' };
@@ -109,6 +110,27 @@ assert.ok(!conTareas.includes('Descartada'), 'la descartada no se lista');
 assert.ok(conTareas.includes('Solo de Uno &lt;b&gt;'), 'el título va escapado');
 
 assert.match(pivotHtml({ objectives: [], tasksOf, expanded: new Set() }), /Sin objetivos/);
+
+// Filtros de varias opciones
+const opciones = [
+  { value: 'TODO', label: 'Por hacer' },
+  { value: 'DONE', label: 'Completada <b>' },
+];
+assert.equal(summaryText(opciones, [], 'Todos los estados', 'estados'), 'Todos los estados', 'nada marcado = sin filtro');
+assert.equal(summaryText(opciones, ['DONE'], 'Todos los estados', 'estados'), 'Completada <b>', 'una marcada muestra su etiqueta');
+assert.equal(summaryText(opciones, ['TODO', 'DONE'], 'Todos los estados', 'estados'), '2 estados');
+assert.equal(summaryText(opciones, ['YA-NO-EXISTE'], 'Todos los estados', 'estados'), 'Todos los estados',
+  'un valor que ya no esta entre las opciones no rompe el resumen');
+
+const menu = menuHtml(opciones, ['DONE']);
+assert.ok(menu.includes('value="DONE" checked'), 'lo marcado viene marcado');
+assert.ok(menu.includes('value="TODO" />'), 'lo no marcado, no');
+assert.ok(menu.includes('Completada &lt;b&gt;'), 'la etiqueta va escapada');
+
+assert.deepEqual(toggle([], 'TODO', true), ['TODO']);
+assert.deepEqual(toggle(['TODO'], 'DONE', true), ['TODO', 'DONE']);
+assert.deepEqual(toggle(['TODO', 'DONE'], 'TODO', false), ['DONE']);
+assert.deepEqual(toggle(['TODO'], 'TODO', true), ['TODO'], 'marcar dos veces no duplica');
 
 assert.equal(ymd(new Date(2026, 10, 3)), '2026-11-03');
 console.log('OK: vistas de agenda y detalle');

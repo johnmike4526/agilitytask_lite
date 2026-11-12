@@ -10,6 +10,7 @@ class El {
     this.classes = new Set();
     this.listeners = new Map();
     this.attributes = new Map();
+    this.subs = new Map();
     this.innerHTML = '';
     this.textContent = '';
     this.value = '';
@@ -44,6 +45,7 @@ class El {
   getAttribute(name) { return this.attributes.get(name) ?? null; }
   removeAttribute(name) { this.attributes.delete(name); }
 
+  contains(other) { return other === this; }
   closest() { return this; }
   scrollIntoView() {}
   querySelector() { return new El(); }
@@ -62,15 +64,22 @@ export function buildDocument(htmlPath) {
   const panels = [...byId.keys()].filter((id) => id.startsWith('panel-')).map((id) => byId.get(id));
   const sortables = [...html.matchAll(/data-sort="([^"]+)"/g)].map(([, sort]) => new El('', { sort }));
 
+  const oyentes = new Map();
   const document = {
+    addEventListener(type, handler) {
+      if (!oyentes.has(type)) oyentes.set(type, []);
+      oyentes.get(type).push(handler);
+    },
+    listeners: oyentes,
     querySelector(selector) {
       const id = /^#([A-Za-z0-9_-]+)/.exec(selector)?.[1];
       if (!id) return null;
       const el = byId.get(id);
       if (!el) return null;             // id inexistente: dashboard.js revienta y la prueba lo caza
       if (!selector.includes(' ')) return el;
-      el.sub ??= new El(`${id} ${selector.split(' ').slice(1).join(' ')}`);
-      return el.sub;
+      const resto = selector.split(' ').slice(1).join(' ');
+      if (!el.subs.has(resto)) el.subs.set(resto, new El(`${id} ${resto}`));
+      return el.subs.get(resto);
     },
     querySelectorAll(selector) {
       if (selector === '.tab') return tabs;

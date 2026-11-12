@@ -2,6 +2,7 @@ import { AgilityClient } from './api.js';
 import { loadConfig, saveConfig } from './store.js';
 import { burndownSvg, workloadBars, escapeHtml, meterHtml } from './charts.js';
 import { pivotHtml } from './pivot.js';
+import { menuHtml, summaryText, toggle } from './multiselect.js';
 import {
   PRIORITY_LABEL, STATUS_LABEL, burndown, defaultRange, groupObjectives,
   closedAt, dueState, isCounted, isDone, percent, perDeveloper, summarize,
@@ -13,6 +14,22 @@ import { detailHtml } from './detail.js';
 const $ = (selector) => document.querySelector(selector);
 const dateFmt = new Intl.DateTimeFormat('es-PA', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const PRIORITY_RANK = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+
+// Los tres filtros de la tabla de tareas son multiseleccion: nada marcado
+// significa «sin filtro», igual que la antigua opcion «Todos».
+const FILTROS = {
+  assignee: { id: '#filter-assignee', vacio: 'Todos los asignados', plural: 'asignados' },
+  status: { id: '#filter-status', vacio: 'Todos los estados', plural: 'estados' },
+  due: { id: '#filter-due', vacio: 'Cualquier fecha', plural: 'vencimientos' },
+};
+const OPCIONES_ESTADO = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED', 'DISCARDED']
+  .map((value) => ({ value, label: STATUS_LABEL[value] }));
+const OPCIONES_FECHA = [
+  { value: 'overdue', label: 'Vencidas' },
+  { value: 'soon', label: 'Por vencer (3 días)' },
+  { value: 'ok', label: 'Al día' },
+  { value: 'none', label: 'Sin fecha' },
+];
 const STATUS_RANK = { IN_PROGRESS: 0, IN_REVIEW: 1, TODO: 2, COMPLETED: 3, DISCARDED: 4 };
 
 const state = {
@@ -24,7 +41,8 @@ const state = {
   group: '',
   groupMode: 'patron',
   sort: { key: 'dueDate', dir: 1 },
-  filters: { search: '', assignee: '', status: '', due: '' },
+  filters: { search: '', assignee: [], status: [], due: [] },
+  filterOptions: { assignee: [], status: OPCIONES_ESTADO, due: OPCIONES_FECHA },
   me: null,
   plan: {},
   calCursor: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -246,26 +264,44 @@ function renderObjectives() {
   });
 }
 
+function renderFilter(campo) {
+  const { id, vacio, plural } = FILTROS[campo];
+  const opciones = state.filterOptions[campo];
+  const elegidas = state.filters[campo];
+  $(`${id} .multi-menu`).innerHTML = menuHtml(opciones, elegidas);
+  $(`${id} .multi-text`).textContent = summaryText(opciones, elegidas, vacio, plural);
+  $(id).classList.toggle('has-filter', elegidas.length > 0);
+}
+
+function renderFilters() {
+  for (const campo of Object.keys(FILTROS)) renderFilter(campo);
+  const activos = Object.keys(FILTROS).some((campo) => state.filters[campo].length) || state.filters.search;
+  $('#filters-clear').hidden = !activos;
+}
+
 function renderAssigneeFilter(tasks) {
-  const names = [...new Set(tasks.flatMap(assigneeNames))].sort((a, b) => a.localeCompare(b));
-  const select = $('#filter-assignee');
-  const current = select.value;
-  select.innerHTML = ['<option value="">Todos los asignados</option>', '<option value="__none__">Sin asignar</option>']
-    .concat(names.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`))
-    .join('');
-  select.value = names.includes(current) || current === '__none__' ? current : '';
+  const nombres = [...new Set(tasks.flatMap(assigneeNames))].sort((a, b) => a.localeCompare(b));
+  state.filterOptions.assignee = [
+    { value: '__none__', label: 'Sin asignar' },
+    ...nombres.map((name) => ({ value: name, label: name })),
+  ];
+  // Al cambiar de grupo o de proyecto puede desaparecer gente ya marcada.
+  const vigentes = new Set(state.filterOptions.assignee.map((opcion) => opcion.value));
+  state.filters.assignee = state.filters.assignee.filter((valor) => vigentes.has(valor));
+  renderFilters();
 }
 
 function applyFilters(tasks) {
   const { search, assignee, status, due } = state.filters;
   const needle = search.trim().toLowerCase();
   return tasks.filter((task) => {
-    if (status && task.status !== status) return false;
-    if (!status && !isCounted(task)) return false;
-    const names = assigneeNames(task);
-    if (assignee === '__none__' && names.length) return false;
-    if (assignee && assignee !== '__none__' && !names.includes(assignee)) return false;
-    if (due && dueState(task) !== due) return false;
+    if (status.length ? !status.includes(task.status) : !isCounted(task)) return false;
+    if (assignee.length) {
+      const names = assigneeNames(task);
+      const coincide = assignee.some((valor) => (valor === '__none__' ? !names.length : names.includes(valor)));
+      if (!coincide) return false;
+    }
+    if (due.length && !due.includes(dueState(task))) return false;
     if (needle) {
       const haystack = `${task.title} ${shortId(task.id)} ${task.id} ${names.join(' ')}`.toLowerCase();
       if (!haystack.includes(needle)) return false;
@@ -388,19 +424,37 @@ function wire() {
     tab.addEventListener('click', () => showTab(tab.dataset.tab));
   }
 
-  const onFilter = () => {
-    state.filters = {
-      search: $('#search').value,
-      assignee: $('#filter-assignee').value,
-      status: $('#filter-status').value,
-      due: $('#filter-due').value,
-    };
+  $('#search').addEventListener('input', (event) => {
+    state.filters.search = event.target.value;
+    renderFilters();
     renderTasks(tasksOfGroup());
-  };
-  $('#search').addEventListener('input', onFilter);
-  for (const id of ['#filter-assignee', '#filter-status', '#filter-due']) {
-    $(id).addEventListener('change', onFilter);
+  });
+
+  for (const [campo, { id }] of Object.entries(FILTROS)) {
+    $(id).addEventListener('change', (event) => {
+      const casilla = event.target;
+      state.filters[campo] = toggle(state.filters[campo], casilla.value, casilla.checked);
+      renderFilter(campo);
+      renderFilters();
+      renderTasks(tasksOfGroup());
+    });
   }
+
+  // Un desplegable abierto se cierra al pulsar fuera; <details> por si solo
+  // solo se cierra con su propio resumen.
+  document.addEventListener('click', (event) => {
+    for (const { id } of Object.values(FILTROS)) {
+      const menu = $(id);
+      if (menu.open && !menu.contains(event.target)) menu.open = false;
+    }
+  });
+
+  $('#filters-clear').addEventListener('click', () => {
+    state.filters = { search: '', assignee: [], status: [], due: [] };
+    $('#search').value = '';
+    renderFilters();
+    renderTasks(tasksOfGroup());
+  });
 
   for (const header of document.querySelectorAll('#tasks-table th[data-sort]')) {
     header.addEventListener('click', () => {
@@ -478,6 +532,7 @@ function wire() {
   state.agendaDone = state.config.agendaDone;
   fillConfigForm();
   wire();
+  renderFilters();
   renderAgenda();
   renderFind();
   if (state.config.apiKey && (await hasHostAccess(state.config.baseUrl))) {

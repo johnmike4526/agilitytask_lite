@@ -57,8 +57,11 @@ vuelve a pedirlo desde Configuración.
   del objetivo. Plegar un objetivo pliega también las personas que colgaban de
   él.
 - **Tabla de tareas**: Id, Prioridad, Tarea, Asignado, % Avance, Fecha con
-  semáforo y Estado. Ordenable por cualquier columna; filtros por texto,
-  asignado, estado y vencimiento.
+  semáforo y Estado. Ordenable por cualquier columna. Los filtros de asignado,
+  estado y vencimiento aceptan varias opciones a la vez: se marcan con casillas
+  y suman, no intersectan —«En curso» más «Completada» muestra las dos—. Nada
+  marcado significa sin filtro. El botón «Limpiar filtros» aparece solo cuando
+  hay alguno puesto.
 - **Agenda**: calendario mensual con la lista de tus tareas abiertas al lado.
   Arrastras una tarea a un día para planificar cuándo la vas a trabajar; la
   arrastras a otro día para moverla, al listado o a la × para desagendarla. El
