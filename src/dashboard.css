@@ -86,7 +86,7 @@ button[disabled] { opacity: .55; cursor: progress; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
 .card-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .card-head.filters { justify-content: flex-start; }
-.card-head.filters input { min-width: 240px; }
+.card-head.filters > input[type="search"] { min-width: 240px; }
 .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
 .form { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
 
@@ -367,4 +367,10 @@ tr.lvl-2 > td { background: color-mix(in srgb, var(--border) 9%, transparent); }
   font-size: 13px; white-space: nowrap; cursor: pointer;
 }
 .multi-option:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
-.multi-option input { width: auto; margin: 0; }
+.multi-option input[type="checkbox"] {
+  flex: none;
+  width: auto; min-width: 0;
+  margin: 0; padding: 0;
+  border: none; background: none;
+  accent-color: var(--accent);
+}
