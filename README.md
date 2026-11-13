@@ -149,6 +149,21 @@ recortan `limit` a 100 sin avisar. El cliente drena todas las páginas y compara
 contra `meta.total`: si faltan registros aborta con error en vez de dibujar un
 burndown a medias.
 
+## Empaquetar para repartir
+
+```
+npm run pack
+```
+
+Deja en `dist/` un zip con lo versionado —sin `dist/` ni tu `src/env.js`— listo
+para «Cargar descomprimida» o para subir a la Web Store. No usa
+`Compress-Archive`: en PowerShell 5 escribe los nombres con barra invertida
+(`src\dashboard.js`), que el formato ZIP no admite; en Windows pasa
+desapercibido, pero al descomprimir en macOS o Linux salen archivos llamados
+`src\dashboard.js` sueltos y la extensión no carga. El script vuelve a abrir el
+zip y falla si aparece alguna barra invertida, si falta `manifest.json` o si el
+número de entradas no coincide.
+
 ## Pruebas
 
 ```

@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Extension de Chrome: burndown, carga por desarrollador, agenda y buscador sobre la API de AgilityTask",
   "scripts": {
-    "test": "node scripts/model.test.mjs && node scripts/view.test.mjs && node scripts/startup.test.mjs"
+    "test": "node scripts/model.test.mjs && node scripts/view.test.mjs && node scripts/startup.test.mjs",
+    "pack": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/pack.ps1"
   }
 }
