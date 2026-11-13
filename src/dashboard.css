@@ -377,3 +377,12 @@ tr.lvl-2 > td { background: color-mix(in srgb, var(--border) 9%, transparent); }
 
 table.tasks tr.is-task { cursor: pointer; }
 table.tasks tr.is-task:hover > td { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+
+.kpi.is-link {
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .12s ease, transform .12s ease;
+}
+.kpi.is-link:hover { border-color: var(--accent); transform: translateY(-1px); }
+.kpi.is-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

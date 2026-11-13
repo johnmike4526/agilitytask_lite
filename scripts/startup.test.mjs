@@ -31,10 +31,10 @@ const TAREAS = [
 
 // Cada escenario necesita su propia instancia del módulo: el sufijo lo fuerza.
 let n = 0;
-async function arrancar({ config = null, schedule = null, granted = true } = {}) {
+async function arrancar({ config = null, schedule = null, granted = true, tareas = TAREAS } = {}) {
   const dom = buildDocument(HTML);
   const { chrome, store } = buildChrome({ config, schedule, granted });
-  const { fetchDouble, calls } = buildFetch({ me: PERSONA, objectives: OBJETIVOS, tasks: TAREAS, projects: PROYECTOS });
+  const { fetchDouble, calls } = buildFetch({ me: PERSONA, objectives: OBJETIVOS, tasks: tareas, projects: PROYECTOS });
   globalThis.document = dom.document;
   globalThis.chrome = chrome;
   globalThis.fetch = fetchDouble;
@@ -269,6 +269,54 @@ async function arrancar({ config = null, schedule = null, granted = true } = {})
   assert.equal(primera(), 't1', 'ordenar por avance pone antes la del 50%');
   await encabezado.dispatch('click', {});
   assert.equal(primera(), 't2', 'y volver a pulsar invierte el orden');
+}
+
+// 10. Las tarjetas del resumen llevan a la tabla con ese subconjunto.
+{
+  const vencida = {
+    id: 't3', title: 'Tarea vencida', status: 'TODO', priority: 'HIGH', progress: 0,
+    dueDate: '2026-01-10T17:00:00.000Z', createdAt: '2026-01-01T00:00:00.000Z',
+    objectiveId: 'o1', assignees: [PERSONA], createdBy: PERSONA, tags: [],
+  };
+  const app = await arrancar({
+    config: { apiKey: 'k', baseUrl: 'https://ejemplo.test/api/v1', projectId: 'p1', group: '', groupPattern: '(entregable)\\s*\\d+', rangeStart: '', rangeEnd: '' },
+    tareas: [...TAREAS, vencida],
+  });
+
+  const tarjeta = (etiqueta) => {
+    const html = app.$('kpis').innerHTML;
+    const corte = html.lastIndexOf('<', html.indexOf(`<span>${etiqueta}</span>`));
+    const trozo = html.slice(html.lastIndexOf('<button', corte), html.indexOf('</button>', corte));
+    return {
+      valor: Number(/<b>(\d+)<\/b>/.exec(trozo)?.[1]),
+      campo: /data-campo="([^"]+)"/.exec(trozo)?.[1],
+      dataset: { campo: /data-campo="([^"]+)"/.exec(trozo)?.[1], valor: /data-valor="([^"]+)"/.exec(trozo)?.[1] },
+    };
+  };
+  const mostradas = () => Number(/^(\d+) de/.exec(app.$('task-count').textContent)?.[1]);
+  const pulsar = async (dataset) => {
+    const boton = new app.El('', dataset);
+    await app.$('kpis').dispatch('click', { target: boton });
+  };
+
+  const vencidas = tarjeta('Vencidas');
+  assert.equal(vencidas.valor, 1, 'el resumen cuenta una vencida');
+  await pulsar(vencidas.dataset);
+
+  const tareas = app.tabs.find((t) => t.dataset.tab === 'tareas');
+  assert.ok(tareas.classes.has('is-active'), 'salta al tab Tareas');
+  assert.equal(mostradas(), vencidas.valor, 'muestra exactamente las que conto la tarjeta');
+  assert.match(app.$('tasks-table').subs.get('tbody').innerHTML, /Tarea vencida/);
+  assert.equal(app.$('filter-due').subs.get('.multi-text').textContent, 'Vencidas', 'el filtro queda a la vista');
+
+  const completadas = tarjeta('Completadas');
+  await pulsar(completadas.dataset);
+  assert.equal(mostradas(), completadas.valor, 'y lo mismo para Completadas');
+  assert.equal(app.$('filter-due').subs.get('.multi-text').textContent, 'Cualquier fecha',
+    'el filtro de la tarjeta anterior no se acumula');
+
+  await pulsar(tarjeta('Tareas').dataset);
+  assert.equal(mostradas(), tarjeta('Tareas').valor, 'la tarjeta del total limpia los filtros');
 }
 
 console.log('OK: arranque del tablero');

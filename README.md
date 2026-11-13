@@ -44,6 +44,11 @@ vuelve a pedirlo desde Configuración.
 - **Selector de grupo**: junta los objetivos que comparten una convención de
   nombre, de modo que un entregable repartido en varios objetivos se ve como
   uno solo. Ver «Agrupación de objetivos» más abajo.
+- **Tarjetas del resumen**: pulsar una lleva al tab Tareas con ese subconjunto
+  filtrado —«Vencidas» muestra las vencidas, «Completadas» las completadas, y la
+  del total limpia los filtros—. El número de la tarjeta y el de la tabla
+  coinciden porque ambos salen del grupo seleccionado. «Avance promedio» no es
+  pulsable: no hay subconjunto que mostrar.
 - **Burndown**: línea ideal recta del inicio al fin del rango y línea real de
   tareas abiertas, reconstruida con `completedAt` de cada tarea cerrada. Se
   calcula en cada consulta; no hay histórico guardado.

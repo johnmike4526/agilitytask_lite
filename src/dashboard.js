@@ -202,19 +202,26 @@ function render() {
 
 function renderKpis(tasks) {
   const stats = summarize(tasks);
+  // Cada tarjeta lleva el filtro que la reproduce en la tabla de tareas. La del
+  // avance promedio no: no hay subconjunto que mostrar.
   const cards = [
-    { label: 'Tareas', value: stats.total },
-    { label: 'Completadas', value: stats.done, tone: 'is-green' },
-    { label: 'En revisión', value: stats.inReview },
-    { label: 'En curso', value: stats.inProgress },
-    { label: 'Por hacer', value: stats.todo },
-    { label: 'Vencidas', value: stats.overdue, tone: stats.overdue ? 'is-red' : '' },
-    { label: 'Sin fecha', value: stats.noDueDate },
+    { label: 'Tareas', value: stats.total, campo: 'todas' },
+    { label: 'Completadas', value: stats.done, tone: 'is-green', campo: 'status', valor: 'COMPLETED' },
+    { label: 'En revisión', value: stats.inReview, campo: 'status', valor: 'IN_REVIEW' },
+    { label: 'En curso', value: stats.inProgress, campo: 'status', valor: 'IN_PROGRESS' },
+    { label: 'Por hacer', value: stats.todo, campo: 'status', valor: 'TODO' },
+    { label: 'Vencidas', value: stats.overdue, tone: stats.overdue ? 'is-red' : '', campo: 'due', valor: 'overdue' },
+    { label: 'Sin fecha', value: stats.noDueDate, campo: 'due', valor: 'none' },
     { label: 'Avance promedio', value: `${stats.progress}%` },
   ];
-  $('#kpis').innerHTML = cards
-    .map((card) => `<div class="kpi ${card.tone ?? ''}"><b>${card.value}</b><span>${card.label}</span></div>`)
-    .join('');
+
+  $('#kpis').innerHTML = cards.map((card) => {
+    const cuerpo = `<b>${card.value}</b><span>${card.label}</span>`;
+    if (!card.campo) return `<div class="kpi ${card.tone ?? ''}">${cuerpo}</div>`;
+    const valor = card.valor ? ` data-valor="${card.valor}"` : '';
+    return `<button type="button" class="kpi is-link ${card.tone ?? ''}" data-campo="${card.campo}"${valor}
+      title="Ver estas tareas">${cuerpo}</button>`;
+  }).join('');
   $('#kpis').hidden = false;
 }
 
@@ -454,6 +461,18 @@ function wire() {
     $('#search').value = '';
     renderFilters();
     renderTasks(tasksOfGroup());
+  });
+
+  $('#kpis').addEventListener('click', (event) => {
+    const tarjeta = event.target.closest('[data-campo]');
+    if (!tarjeta) return;
+    const { campo, valor } = tarjeta.dataset;
+    state.filters = { search: '', assignee: [], status: [], due: [] };
+    if (campo !== 'todas') state.filters[campo] = [valor];
+    $('#search').value = '';
+    renderFilters();
+    renderTasks(tasksOfGroup());
+    showTab('tareas');
   });
 
   $('#tasks-table').addEventListener('click', (event) => {
