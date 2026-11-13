@@ -338,7 +338,7 @@ function renderTasks(tasks) {
     const names = assigneeNames(task);
     const hint = light === 'overdue' ? 'Vencida' : light === 'soon' ? 'Vence en 3 días o menos' : '';
     return `
-      <tr>
+      <tr class="is-task" data-task="${escapeHtml(task.id)}" title="Abrir el detalle">
         <td class="task-id" title="${escapeHtml(task.id)}">${shortId(task.id)}</td>
         <td><span class="tag prio-${task.priority}">${PRIORITY_LABEL[task.priority] ?? task.priority}</span></td>
         <td class="task-title">${escapeHtml(task.title)}</td>
@@ -454,6 +454,11 @@ function wire() {
     $('#search').value = '';
     renderFilters();
     renderTasks(tasksOfGroup());
+  });
+
+  $('#tasks-table').addEventListener('click', (event) => {
+    const fila = event.target.closest('[data-task]');
+    if (fila) openInFinder(fila.dataset.task);
   });
 
   for (const header of document.querySelectorAll('#tasks-table th[data-sort]')) {

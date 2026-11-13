@@ -246,4 +246,29 @@ async function arrancar({ config = null, schedule = null, granted = true } = {})
   assert.ok(!filtro.classes.has('has-filter'));
 }
 
+// 9. Pulsar una fila de la tabla de tareas abre su detalle.
+{
+  const app = await arrancar({
+    config: { apiKey: 'k', baseUrl: 'https://ejemplo.test/api/v1', projectId: 'p1', group: '', groupPattern: '(entregable)\\s*\\d+', rangeStart: '', rangeEnd: '' },
+  });
+  const tabla = app.$('tasks-table');
+  assert.match(tabla.subs.get('tbody').innerHTML, /data-task="t1"/, 'cada fila lleva su tarea');
+
+  const fila = new app.El('', { task: 't1' });
+  await tabla.dispatch('click', { target: fila });
+
+  const buscar = app.tabs.find((t) => t.dataset.tab === 'buscar');
+  assert.ok(buscar.classes.has('is-active'), 'lleva al tab Buscar');
+  assert.match(app.$('find-detail').innerHTML, /Tarea en curso/);
+
+  // El encabezado ordenable no debe quedar atrapado por el nuevo manejador.
+  const primera = () => /data-task="([^"]+)"/.exec(tabla.subs.get('tbody').innerHTML)?.[1];
+  assert.equal(primera(), 't2', 'por defecto ordena por fecha: primero la mas proxima');
+  const encabezado = app.sortables.find((th) => th.dataset.sort === 'progress');
+  await encabezado.dispatch('click', {});
+  assert.equal(primera(), 't1', 'ordenar por avance pone antes la del 50%');
+  await encabezado.dispatch('click', {});
+  assert.equal(primera(), 't2', 'y volver a pulsar invierte el orden');
+}
+
 console.log('OK: arranque del tablero');

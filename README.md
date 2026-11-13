@@ -61,7 +61,8 @@ vuelve a pedirlo desde Configuración.
   estado y vencimiento aceptan varias opciones a la vez: se marcan con casillas
   y suman, no intersectan —«En curso» más «Completada» muestra las dos—. Nada
   marcado significa sin filtro. El botón «Limpiar filtros» aparece solo cuando
-  hay alguno puesto.
+  hay alguno puesto. Pulsar una fila abre el detalle de esa tarea en el tab
+  Buscar.
 - **Agenda**: calendario mensual con la lista de tus tareas abiertas al lado.
   Arrastras una tarea a un día para planificar cuándo la vas a trabajar; la
   arrastras a otro día para moverla, al listado o a la × para desagendarla. El

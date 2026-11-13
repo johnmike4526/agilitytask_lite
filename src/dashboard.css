@@ -374,3 +374,6 @@ tr.lvl-2 > td { background: color-mix(in srgb, var(--border) 9%, transparent); }
   border: none; background: none;
   accent-color: var(--accent);
 }
+
+table.tasks tr.is-task { cursor: pointer; }
+table.tasks tr.is-task:hover > td { background: color-mix(in srgb, var(--accent) 7%, transparent); }

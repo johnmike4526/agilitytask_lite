@@ -89,7 +89,7 @@ export function buildDocument(htmlPath) {
     },
   };
 
-  return { document, byId, tabs, panels, El };
+  return { document, byId, tabs, panels, sortables, El };
 }
 
 export function buildChrome({ config = null, schedule = null, granted = true } = {}) {
